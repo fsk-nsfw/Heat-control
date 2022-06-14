@@ -1,11 +1,11 @@
 @font-face {
     font-family: katype;
-    src: url("./Katype Scribe.ttf");
+    src: url("../Fonts/Katype Scribe.ttf");
 }
 
 @font-face {
     font-family: cabin;
-    src: url("./Cabin Condensed.ttf");
+    src: url("../Fonts/Cabin Condensed.ttf");
 }
 
 body {
