@@ -30,47 +30,80 @@ const INFORMATION_ALERT = 1;
 const IMAGES_TO_SEARCH = 20;
 
 let showInfo = false;
-let active_image_number = -1;
+let active_image_number = 0;
 
-let imageList = [];
+let obtainedData;
 
 $(document).ready(function() {
     $("#infoTOGGLEbutton").click(function() {
         generateAlerts(INFORMATION_ALERT);
 
-        $("#alert_message").html("Image informations will now be <b>displayed</b>");
+        showInfo = !showInfo;
+        if (showInfo) {
+            $("#alert_message").html("Infos will now be sent to the <b>console</b>");
+        } else {
+            $("#alert_message").html("Infos will no more be <b>shown</b>");
+        }
 
         removeAlerts();
     });
 
     $("#nextIMAGEbutton").click(function() {
-        active_image_number = (active_image_number + 1) % imageList.length;
+        active_image_number = (active_image_number + 1) % obtainedData.posts.length;
+
         showPicture();
-        showData();
     });
     
     $("#previousIMAGEbutton").click(function() {
         if (active_image_number - 1 < 0) {
-            active_image_number = imageList.length - 1;
+            active_image_number = obtainedData.posts.length - 1;
         } else {
             active_image_number--;
         }
+
         showPicture();
-        showData();
     });
     
     $("#resetIMAGEbutton").click(function() {
         active_image_number = 0;
         showPicture();
-        showData();
+    });
+
+    $("#reloadSEARCHbutton").click(function() {
+        requestFiles();
     });
 
     requestFiles();
-    showPicture();
 });
 
 function showPicture() {
-    $("#image").attr("src", imageList[active_image_number]);
+    $("#image").attr("src", obtainedData.posts[active_image_number].file.url);
+    showData();
+}
+
+function showData() {
+    if (showInfo) {
+        console.log("POST ID: " + obtainedData.posts[active_image_number].id);
+        console.log("IMAGE WIDTH: " + obtainedData.posts[active_image_number].file.width);
+        console.log("IMAGE HEIGTH: " + obtainedData.posts[active_image_number].file.height);
+        console.log("UPVOTES: " +  + obtainedData.posts[active_image_number].score.total);
+        switch(obtainedData.posts[active_image_number].rating) {
+            case "s": {
+                console.log("RATING: safe");
+                break;
+            }
+            case "q": {
+                console.log("RATING: questionable");
+                break;
+            }
+            case "e": {
+                console.log("RATING: explicit");
+                break;
+            }
+        }
+        console.log("IMAGE LINK: " + obtainedData.posts[active_image_number].file.url);
+        console.log("POSITION: " + (active_image_number + 1));
+    }
 }
 
 function requestFiles() {
@@ -79,17 +112,23 @@ function requestFiles() {
         converters: {
             "text application/json": jQuery.parseJSON
         },
-        url: "https://e621.net/posts.json?_client=" + USER_AGENT + "&limit=" + 15 + "&page=" + 1 + "&tags=lycanroc+-female" + "&callback=?",
-        success: dividePictures,
+        url: "https://e621.net/posts.json?_client=" + USER_AGENT + "&limit=" + 15 + "&page=" + 1 + "&tags=" + addInputTags() + "&callback=?",
+        success: storeData,
         error: occurredError
     })
 };
 
-function dividePictures(data) {
-    for (let i in data.posts) {
-        imageList[i] = data.posts[i].file.url;
-        console.log(imageList[i]);
-    }
+function addInputTags() {
+    let tag_list = $("#tagINPUTtext").val();
+
+    console.log("https://e621.net/posts.json?_client=" + USER_AGENT + "&limit=" + 15 + "&page=" + 1 + "&tags=" + tag_list + "&callback=?");
+    console.log("TAGS: " + tag_list);
+
+    return tag_list;
+}
+
+function storeData(data) {
+    obtainedData = data;
 }
 
 function occurredError(xhr, status, error) {
@@ -114,7 +153,7 @@ function displayError(error_value) {
 }
 
 function removeAlerts() {
-    $("#alert_div").delay(5000).fadeOut(1000).promise().done(function() {
+    $("#alert_div").delay(2000).fadeOut(1000).promise().done(function() {
         document.body.removeChild(document.getElementById("alert_div"));
     });
 }
